@@ -10,10 +10,15 @@
     <!-- CSS -->
     <style>
     #my_camera{
-        width: 320px;
-        height: 240px;
+        width: 280px;
+        height: 280px;
         border: 1px solid black;
+		border-radius: 50%;
     }
+	video {
+		border-radius: 50%;
+	}
+	
 	</style>
 
 	<div id="my_camera"></div>
@@ -23,77 +28,93 @@
 	
 	<!-- Webcam.min.js -->
     <script type="text/javascript" src="webcamjs/webcam.min.js"></script>
-
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 	<!-- Configure a few settings and attach camera -->
 	<script language="JavaScript">
-		/*Webcam.set({
-			width: 320,
-			height: 240,
-			image_format: 'jpeg',
-			jpeg_quality: 90
+		Webcam.set({
+		  width: 280,
+		  height: 280,
+		  image_format: 'jpeg',
+		  jpeg_quality: 90,
+		  flip_horiz: true,
+		  dest_width: 280,
+		  dest_height: 280,
+		  image_fit: 'contain', // Adjust as needed
 		});
-		Webcam.attach( '#my_camera' );*/
-		function dynamicallyLoadScript(url, callback) {
-        var script = document.createElement("script");  // create a script DOM node
-        script.src = url;  // set its src to the provided URL
-        script.onload = callback;
-
-        document.head.appendChild(script);  // add it to the end of the head section of the page (could change 'head' to 'body' to add it to the end of the body section instead)
-		}
-
-		function initStream(dest_width, dest_height) {
-        	dynamicallyLoadScript('webcamjs/webcam.min.js', () => {
-            Webcam.set('constraints', {
-                facingMode: CAMERA_MODE,
-                dest_width,
-                dest_height,
-            });
-            Webcam.attach('#my_camera');
-        });
-    }
-		var attachWebcam = function() {
-			var width = 320;
-			var height = 240;
-
-		if(screen.width < screen.height) {
-			width = 240;
-			height = 320;
-		}
-
-  		Webcam.set({
-			width: width,
-			height: height,
-			dest_width: width,
-			dest_height: height,
-			crop_width: width,
-			crop_height: height
-  		});
-
-  		Webcam.attach('#my_camera');
-	};
-
-	window.addEventListener('orientationchange', function() {
-	Webcam.reset();
-	attachWebcam();
-	});
-
-	attachWebcam();
-	</script>
-	<!-- A button for taking snaps -->
-	
-	<!-- Code to handle taking the snapshot and displaying it locally -->
-	<script language="JavaScript">
-
+	  
+		Webcam.attach('#my_camera');
+	  
 		function take_snapshot() {
-			
-			// take snapshot and get image data
-			Webcam.snap( function(data_uri) {
-				// display results in page
-				document.getElementById('results').innerHTML = 
-					'<img src="'+data_uri+'"/>';
-			} );
+		  Webcam.snap(function (data_uri, canvas) {
+			const image = new Image();
+			image.src = document.getElementById('results').innerHTML = 
+            '<img src="'+data_uri+'"/>';
+	  
+			// Use exif-js to read the image orientation
+			EXIF.getData(image, function () {
+			  const orientation = EXIF.getTag(this, 'Orientation');
+			  const rotatedImage = rotateImage(image, orientation);
+	  
+			  document.getElementById('results').innerHTML = '';
+			  document.getElementById('results').appendChild(rotatedImage);
+			});
+		  });
 		}
-	</script>
+	  
+		function rotateImage(img, orientation) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = img.width;
+        const height = img.height;
+
+        // Set proper canvas dimensions before transformation
+        if (4 < orientation && orientation < 9) {
+            canvas.width = height;
+            canvas.height = width;
+        } else {
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        // Perform the rotation based on the EXIF orientation
+        switch (orientation) {
+            case 2:
+                ctx.transform(-1, 0, 0, 1, width, 0);
+                break;
+            case 3:
+                ctx.transform(-1, 0, 0, -1, width, height);
+                break;
+            case 4:
+                ctx.transform(1, 0, 0, -1, 0, height);
+                break;
+            case 5:
+                ctx.transform(0, 1, 1, 0, 0, 0);
+                break;
+            case 6:
+                ctx.transform(0, 1, -1, 0, height, 0);
+                break;
+            case 7:
+                ctx.transform(0, -1, -1, 0, height, width);
+                break;
+            case 8:
+                ctx.transform(0, -1, 1, 0, 0, width);
+                break;
+            default:
+                ctx.transform(1, 0, 0, 1, 0, 0);
+        }
+
+        // Draw the image onto the canvas
+        ctx.drawImage(img, 0, 0);
+
+        // Create a new image element with the rotated image
+        const rotatedImage = new Image();
+        rotatedImage.src = canvas.toDataURL('image/jpeg');
+
+        return rotatedImage;
+    }
+	  </script>
+	
 	
 </body>
 </html>
+
