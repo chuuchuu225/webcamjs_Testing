@@ -38,8 +38,14 @@
 		Webcam.attach('#my_camera');
 	
 		function isMobile() {
-			// Use a simple check based on screen width
-			return window.innerWidth <= 768; // Adjust the threshold as needed
+			// Use user agent detection for basic mobile detection
+			const userAgent = navigator.userAgent.toLowerCase();
+			const mobileKeywords = ['iphone', 'android', 'windows phone', 'ipad', 'ipod'];
+	
+			// Check if the screen width is smaller than a certain threshold
+			const isSmallScreen = window.innerWidth <= 768; // Adjust the threshold as needed
+	
+			return isSmallScreen && mobileKeywords.some(keyword => userAgent.includes(keyword));
 		}
 	
 		function take_snapshot() {
@@ -48,13 +54,17 @@
 				// Check if the snapshot is taken from a mobile device
 				const source = isMobile() ? 'Mobile Camera' : 'Webcam';
 	
-				// Display results in page with source information
+				// Rotate the image by -90 degrees if taken from a mobile camera
+				const rotation = isMobile() ? -90 : 0;
+	
+				// Display results in page with source information and rotation
 				document.getElementById('results').innerHTML =
 					'<p>Image Source: ' + source + '</p>' +
-					'<img src="' + data_uri + '"/>';
+					'<img style="transform: rotate(' + rotation + 'deg);" src="' + data_uri + '"/>';
 			});
 		}
 	</script>
+	
 	
 	
 </body>
