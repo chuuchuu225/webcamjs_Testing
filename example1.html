@@ -33,33 +33,51 @@
 			jpeg_quality: 90
 		});
 		Webcam.attach( '#my_camera' );*/
+		function dynamicallyLoadScript(url, callback) {
+        var script = document.createElement("script");  // create a script DOM node
+        script.src = url;  // set its src to the provided URL
+        script.onload = callback;
+
+        document.head.appendChild(script);  // add it to the end of the head section of the page (could change 'head' to 'body' to add it to the end of the body section instead)
+		}
+
+		function initStream(dest_width, dest_height) {
+        	dynamicallyLoadScript('webcamjs/webcam.min.js', () => {
+            Webcam.set('constraints', {
+                facingMode: CAMERA_MODE,
+                dest_width,
+                dest_height,
+            });
+            Webcam.attach('#my_camera');
+        });
+    }
 		var attachWebcam = function() {
-  var width = 320;
-  var height = 240;
+			var width = 320;
+			var height = 240;
 
-  if(screen.width < screen.height) {
-    width = 240;
-    height = 320;
-  }
+		if(screen.width < screen.height) {
+			width = 240;
+			height = 320;
+		}
 
-  Webcam.set({
-    width: width,
-    height: height,
-    dest_width: width,
-    dest_height: height,
-    crop_width: width,
-    crop_height: height
-  });
+  		Webcam.set({
+			width: width,
+			height: height,
+			dest_width: width,
+			dest_height: height,
+			crop_width: width,
+			crop_height: height
+  		});
 
-  Webcam.attach('#my_camera');
-};
+  		Webcam.attach('#my_camera');
+	};
 
-window.addEventListener('orientationchange', function() {
-  Webcam.reset();
-  attachWebcam();
-});
+	window.addEventListener('orientationchange', function() {
+	Webcam.reset();
+	attachWebcam();
+	});
 
-attachWebcam();
+	attachWebcam();
 	</script>
 	<!-- A button for taking snaps -->
 	
