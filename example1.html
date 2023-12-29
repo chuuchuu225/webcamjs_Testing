@@ -28,93 +28,34 @@
 	
 	<!-- Webcam.min.js -->
     <script type="text/javascript" src="webcamjs/webcam.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
-	<!-- Configure a few settings and attach camera -->
 	<script language="JavaScript">
 		Webcam.set({
-		  width: 280,
-		  height: 280,
-		  image_format: 'jpeg',
-		  jpeg_quality: 90,
-		  flip_horiz: true,
-		  dest_width: 280,
-		  dest_height: 280,
-		  image_fit: 'contain', // Adjust as needed
+			width: 320,
+			height: 240,
+			image_format: 'jpeg',
+			jpeg_quality: 90
 		});
-	  
 		Webcam.attach('#my_camera');
-	  
-		function take_snapshot() {
-		  Webcam.snap(function (data_uri, canvas) {
-			const image = new Image();
-			image.src = document.getElementById('results').innerHTML = 
-            '<img src="'+data_uri+'"/>';
-	  
-			// Use exif-js to read the image orientation
-			EXIF.getData(image, function () {
-			  const orientation = EXIF.getTag(this, 'Orientation');
-			  const rotatedImage = rotateImage(image, orientation);
-	  
-			  document.getElementById('results').innerHTML = '';
-			  document.getElementById('results').appendChild(rotatedImage);
-			});
-		  });
+	
+		function isMobile() {
+			// Use a simple check based on screen width
+			return window.innerWidth <= 768; // Adjust the threshold as needed
 		}
-	  
-		function rotateImage(img, orientation) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const width = img.width;
-        const height = img.height;
-
-        // Set proper canvas dimensions before transformation
-        if (4 < orientation && orientation < 9) {
-            canvas.width = height;
-            canvas.height = width;
-        } else {
-            canvas.width = width;
-            canvas.height = height;
-        }
-
-        // Perform the rotation based on the EXIF orientation
-        switch (orientation) {
-            case 2:
-                ctx.transform(-1, 0, 0, 1, width, 0);
-                break;
-            case 3:
-                ctx.transform(-1, 0, 0, -1, width, height);
-                break;
-            case 4:
-                ctx.transform(1, 0, 0, -1, 0, height);
-                break;
-            case 5:
-                ctx.transform(0, 1, 1, 0, 0, 0);
-                break;
-            case 6:
-                ctx.transform(0, 1, -1, 0, height, 0);
-                break;
-            case 7:
-                ctx.transform(0, -1, -1, 0, height, width);
-                break;
-            case 8:
-                ctx.transform(0, -1, 1, 0, 0, width);
-                break;
-            default:
-                ctx.transform(1, 0, 0, 1, 0, 0);
-        }
-
-        // Draw the image onto the canvas
-        ctx.drawImage(img, 0, 0);
-
-        // Create a new image element with the rotated image
-        const rotatedImage = new Image();
-        rotatedImage.src = canvas.toDataURL('image/jpeg');
-
-        return rotatedImage;
-    }
-	  </script>
+	
+		function take_snapshot() {
+			// take snapshot and get image data
+			Webcam.snap(function (data_uri) {
+				// Check if the snapshot is taken from a mobile device
+				const source = isMobile() ? 'Mobile Camera' : 'Webcam';
+	
+				// Display results in page with source information
+				document.getElementById('results').innerHTML =
+					'<p>Image Source: ' + source + '</p>' +
+					'<img src="' + data_uri + '"/>';
+			});
+		}
+	</script>
 	
 	
 </body>
 </html>
-
