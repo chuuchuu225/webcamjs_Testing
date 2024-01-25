@@ -1,78 +1,64 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>How to capture picture from webcam with Webcam.js</title>
-
-</head>
+    <title>Face Detection with Webcam.js and face-api.js</title>
+    <!-- Include Webcam.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+    <!-- Include face-api.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.23.0"></script>
 </head>
 <body>
-    <!-- CSS -->
-    <style>
-    #my_camera{
-        width: 280px;
-        height: 280px;
-        border: 1px solid black;
-		border-radius: 50%;
-    }
-	video {
-		border-radius: 50%;
-	}
-	#results img {
-		width: 200px;
-		height: 200px;
-		border-radius: 50%;
-	}
-	.webcamjs-ios-text {
-		display: none;
-	}
-	</style>
 
-	<div id="my_camera"></div>
-	<input type=button value="Take Snapshot" onClick="take_snapshot()">
-	
-    <div id="results" ></div>
-	
-	<!-- Webcam.min.js -->
-    <script type="text/javascript" src="webcamjs/webcam.min.js"></script>
-	<script language="JavaScript">
-		Webcam.set({
-			width: 320,
-			height: 240,
-			image_format: 'jpeg',
-			jpeg_quality: 90
-		});
-		Webcam.attach('#my_camera');
-	
-		function isMobile() {
-			// Use user agent detection for basic mobile detection
-			const userAgent = navigator.userAgent.toLowerCase();
-			const mobileKeywords = ['iphone', 'android', 'windows phone', 'ipad', 'ipod'];
-	
-			// Check if the screen width is smaller than a certain threshold
-			const isSmallScreen = window.innerWidth <= 768; // Adjust the threshold as needed
-	
-			return isSmallScreen && mobileKeywords.some(keyword => userAgent.includes(keyword));
-		}
-	
-		function take_snapshot() {
-			// take snapshot and get image data
-			Webcam.snap(function (data_uri) {
-				// Check if the snapshot is taken from a mobile device
-				const source = isMobile() ? 'Mobile Camera' : 'Webcam';
-	
-				// Rotate the image by -90 degrees if taken from a mobile camera
-				const rotation = isMobile() ? -90 : 0;
-	
-				// Display results in page with source information and rotation
-				document.getElementById('results').innerHTML =
-					'<p>Image Source: ' + source + '</p>' +
-					'<img style="transform: rotate(' + rotation + 'deg);" src="' + data_uri + '"/>';
-			});
-		}
-	</script>
-	
-	
-	
+<!-- Limited area for face detection -->
+<canvas id="limitedArea" width="640" height="480" style="border: 2px solid #333;"></canvas>
+
+<!-- Initialize Webcam.js -->
+<script>
+    Webcam.set({
+        width: 640,
+        height: 480,
+        image_format: 'jpeg',
+        jpeg_quality: 90
+    });
+
+    Webcam.attach('#limitedArea');
+</script>
+
+<!-- Load face-api.js and perform face detection -->
+<script>
+    // Load face-api.js models from GitHub
+    Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
+    ]).then(startFaceDetection);
+
+    // Start face detection
+    function startFaceDetection() {
+        // Get limited area canvas
+        const limitedAreaCanvas = document.getElementById('limitedArea');
+
+        // Detect faces within the limited area
+        Webcam.snap((data_uri) => {
+            faceapi.detectSingleFace(data_uri, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks()
+                .then((result) => {
+                    if (result) {
+                        // Draw the limited area canvas
+                        const context = limitedAreaCanvas.getContext('2d');
+                        context.clearRect(0, 0, limitedAreaCanvas.width, limitedAreaCanvas.height);
+                        context.drawImage(result.image, result.detection.box.x, result.detection.box.y, result.detection.box.width, result.detection.box.height, 0, 0, limitedAreaCanvas.width, limitedAreaCanvas.height);
+
+                        // Draw face landmarks
+                        faceapi.draw.drawFaceLandmarks(limitedAreaCanvas, result);
+                    }
+                });
+        });
+    }
+</script>
+
 </body>
 </html>
