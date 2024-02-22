@@ -1,64 +1,55 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Detection with Webcam.js and face-api.js</title>
-    <!-- Include Webcam.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
-    <!-- Include face-api.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.23.0"></script>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>WebcamJS Test Page</title>
+	<style type="text/css">
+		body { font-family: Helvetica, sans-serif; }
+		h2, h3 { margin-top:0; }
+		form { margin-top: 15px; }
+		form > input { margin-right: 15px; }
+		#results { float:right; margin:20px; padding:20px; border:1px solid; background:#ccc; }
+	</style>
 </head>
 <body>
-
-<!-- Limited area for face detection -->
-<canvas id="limitedArea" width="640" height="480" style="border: 2px solid #333;"></canvas>
-
-<!-- Initialize Webcam.js -->
-<script>
-    Webcam.set({
-        width: 640,
-        height: 480,
-        image_format: 'jpeg',
-        jpeg_quality: 90
-    });
-
-    Webcam.attach('#limitedArea');
-</script>
-
-<!-- Load face-api.js and perform face detection -->
-<script>
-    // Load face-api.js models from GitHub
-    Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-    ]).then(startFaceDetection);
-
-    // Start face detection
-    function startFaceDetection() {
-        // Get limited area canvas
-        const limitedAreaCanvas = document.getElementById('limitedArea');
-
-        // Detect faces within the limited area
-        Webcam.snap((data_uri) => {
-            faceapi.detectSingleFace(data_uri, new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .then((result) => {
-                    if (result) {
-                        // Draw the limited area canvas
-                        const context = limitedAreaCanvas.getContext('2d');
-                        context.clearRect(0, 0, limitedAreaCanvas.width, limitedAreaCanvas.height);
-                        context.drawImage(result.image, result.detection.box.x, result.detection.box.y, result.detection.box.width, result.detection.box.height, 0, 0, limitedAreaCanvas.width, limitedAreaCanvas.height);
-
-                        // Draw face landmarks
-                        faceapi.draw.drawFaceLandmarks(limitedAreaCanvas, result);
-                    }
-                });
-        });
-    }
-</script>
-
+	
+	
+	<h1>WebcamJS Test Page</h1>
+	<h3>Demonstrates simple 320x240 capture &amp; display</h3>
+	
+	<div id="my_camera"></div>
+	
+	<!-- First, include the Webcam.js JavaScript Library -->
+	<script type="text/javascript" src="webcamjs/webcam.min.js"></script>
+	
+	<!-- Configure a few settings and attach camera -->
+	<script language="JavaScript">
+		Webcam.set({
+			width: 320,
+			height: 240,
+			image_format: 'jpeg',
+			jpeg_quality: 90
+		});
+		Webcam.attach( '#my_camera' );
+	</script>
+	
+	<!-- A button for taking snaps -->
+	<form>
+		<input type=button value="Take Snapshot" onClick="take_snapshot()">
+	</form>
+	
+	<!-- Code to handle taking the snapshot and displaying it locally -->
+	<script language="JavaScript">
+		function take_snapshot() {
+			// take snapshot and get image data
+			Webcam.snap( function(data_uri) {
+				// display results in page
+				document.getElementById('my_camera').innerHTML = 
+					'<img src="'+data_uri+'"/>';
+			} );
+		}
+	</script>
+	
 </body>
 </html>
