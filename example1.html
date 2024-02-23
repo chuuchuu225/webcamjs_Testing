@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>WebcamJS Test Page 13:34</title>
+    <title>WebcamJS Test Page</title>
     <style type="text/css">
         body { font-family: Helvetica, sans-serif; }
         h2, h3 { margin-top:0; }
         form { margin-top: 15px; }
         form > input { margin-right: 15px; }
         #my_camera { 
-            max-width: 100%; /* Ensure the image doesn't exceed the screen width */
+            max-width: 100%;
             margin: 20px auto;
             padding: 20px;
             border: 1px solid;
@@ -20,14 +19,13 @@
 </head>
 <body>
     
-    <h1>WebcamJS Test Page 13:34</h1>
+    <h1>WebcamJS Test Page 13:39</h1>
     <h3>Demonstrates simple 320x240 capture &amp; display</h3>
     
     <div id="my_camera"></div>
     
     <!-- First, include the Webcam.js JavaScript Library -->
     <script type="text/javascript" src="webcamjs/webcam.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
 
     <!-- Configure a few settings and attach camera -->
     <script language="JavaScript">
@@ -50,15 +48,14 @@
     <script language="JavaScript">
         function take_snapshot() {
             // take snapshot and get image data
-            Webcam.snap(function(data_uri, canvas) {
+            Webcam.snap(function(data_uri) {
                 // Create an image element and set its source to the data URI
                 var imgElement = document.createElement('img');
                 imgElement.src = data_uri;
 
                 // Handle image orientation for mobile devices
                 if (isMobileDevice()) {
-                    var orientation = detectImageOrientation(canvas);
-                    imgElement.style.transform = 'rotate(' + getRotation(orientation) + 'deg)';
+                    adjustImageOrientation(imgElement);
                 }
 
                 // Display the image in the page
@@ -72,27 +69,21 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        // Function to detect image orientation using EXIF.js
-        function detectImageOrientation(canvas) {
-            var orientation = 1; // Default orientation
+        // Function to adjust image orientation for mobile devices
+        function adjustImageOrientation(imgElement) {
+            var orientation = window.orientation || 0;
 
-            // Use EXIF.js to get the image orientation
-            if (window.EXIF) {
-                EXIF.getData(canvas, function() {
-                    orientation = EXIF.getTag(this, 'Orientation') || 1;
-                });
-            }
-
-            return orientation;
-        }
-
-        // Function to get the rotation angle based on image orientation
-        function getRotation(orientation) {
+            // Rotate the image based on the device orientation
             switch (orientation) {
-                case 3: return 180;
-                case 6: return 90;
-                case 8: return -90;
-                default: return 0;
+                case 90:
+                    imgElement.style.transform = 'rotate(-90deg)';
+                    break;
+                case -90:
+                    imgElement.style.transform = 'rotate(90deg)';
+                    break;
+                default:
+                    imgElement.style.transform = 'rotate(0deg)';
+                    break;
             }
         }
     </script>
