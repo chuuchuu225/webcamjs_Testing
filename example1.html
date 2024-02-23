@@ -2,54 +2,75 @@
 
 <html lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>WebcamJS Test Page</title>
-	<style type="text/css">
-		body { font-family: Helvetica, sans-serif; }
-		h2, h3 { margin-top:0; }
-		form { margin-top: 15px; }
-		form > input { margin-right: 15px; }
-		#results { float:right; margin:20px; padding:20px; border:1px solid; background:#ccc; }
-	</style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>WebcamJS Test Page</title>
+    <style type="text/css">
+        body { font-family: Helvetica, sans-serif; }
+        h2, h3 { margin-top:0; }
+        form { margin-top: 15px; }
+        form > input { margin-right: 15px; }
+        #my_camera { 
+            max-width: 100%; /* Ensure the image doesn't exceed the screen width */
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid;
+            background: #ccc;
+        }
+    </style>
 </head>
 <body>
-	
-	
-	<h1>WebcamJS Test Page</h1>
-	<h3>Demonstrates simple 320x240 capture &amp; display</h3>
-	
-	<div id="my_camera"></div>
-	
-	<!-- First, include the Webcam.js JavaScript Library -->
-	<script type="text/javascript" src="webcamjs/webcam.min.js"></script>
-	
-	<!-- Configure a few settings and attach camera -->
-	<script language="JavaScript">
-		Webcam.set({
-			width: 320,
-			height: 240,
-			image_format: 'jpeg',
-			jpeg_quality: 90
-		});
-		Webcam.attach( '#my_camera' );
-	</script>
-	
-	<!-- A button for taking snaps -->
-	<form>
-		<input type=button value="Take Snapshot" onClick="take_snapshot()">
-	</form>
-	
-	<!-- Code to handle taking the snapshot and displaying it locally -->
-	<script language="JavaScript">
-		function take_snapshot() {
-			// take snapshot and get image data
-			Webcam.snap( function(data_uri) {
-				// display results in page
-				document.getElementById('my_camera').innerHTML = 
-					'<img src="'+data_uri+'"/>';
-			} );
-		}
-	</script>
-	
+    
+    <h1>WebcamJS Test Page</h1>
+    <h3>Demonstrates simple 320x240 capture &amp; display</h3>
+    
+    <div id="my_camera"></div>
+    
+    <!-- First, include the Webcam.js JavaScript Library -->
+    <script type="text/javascript" src="webcamjs/webcam.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
+
+    <!-- Configure a few settings and attach camera -->
+    <script language="JavaScript">
+        Webcam.set({
+            width: 320,
+            height: 240,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+        });
+        Webcam.attach( '#my_camera' );
+    </script>
+    
+    <!-- A button for taking snaps -->
+    <form>
+        <input type=button value="Take Snapshot" onClick="take_snapshot()">
+    </form>
+    
+    <!-- Code to handle taking the snapshot and displaying it locally -->
+    <script language="JavaScript">
+        function take_snapshot() {
+            // take snapshot and get image data
+            Webcam.snap(function(data_uri, canvas) {
+                // Use exif-js to get the image orientation
+                EXIF.getData(canvas, function() {
+                    var orientation = EXIF.getTag(this, 'Orientation');
+                    
+                    // Display results in page, adjusting for orientation
+                    document.getElementById('my_camera').innerHTML = 
+                        '<img src="'+data_uri+'" style="transform: rotate(' + getRotation(orientation) + 'deg);"/>';
+                });
+            });
+        }
+
+        // Function to get the rotation angle based on EXIF orientation
+        function getRotation(orientation) {
+            switch (orientation) {
+                case 3: return 180;
+                case 6: return 90;
+                case 8: return -90;
+                default: return 0;
+            }
+        }
+    </script>
+    
 </body>
 </html>
