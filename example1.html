@@ -52,6 +52,10 @@
     
     <!-- Code to handle taking the snapshot and displaying it locally -->
     <script language="JavaScript">
+        // Function to detect if it's a mobile device
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
         function take_snapshot() {
             // take snapshot and get image data
             Webcam.snap(function(data_uri) {
@@ -61,7 +65,7 @@
 
                 // Check if it's a mobile device and apply CSS transformation
                 if (isMobileDevice()) {
-                    imgElement.style.transform = 'rotate(-90deg)';
+                    alert('This is mobile');
                 }
 
                 document.getElementById('my_camera').innerHTML = '';
@@ -69,10 +73,7 @@
             });
         }
 
-        // Function to detect if it's a mobile device
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
+        
     </script>
     
 </body>
