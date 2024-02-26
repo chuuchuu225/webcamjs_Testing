@@ -15,7 +15,12 @@
             border: 1px solid;
             background: #ccc;
         }
-        
+        .androidCamera img{
+            transform: rotate(45deg);
+        }
+        .iosCamera img{
+            transform: rotate(-45deg);
+        }
         @media screen and (min-width: 576px) {
             
             #my_camera  span {
@@ -67,27 +72,36 @@
                 document.getElementById('my_camera').innerHTML = '';
                 document.getElementById('my_camera').appendChild(imgElement);
                 // Create an image element and set its source to the data URI
-                function applyMobileDeviceStyles() {
-        var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-
-        if (/Android/i.test(userAgent)) {
-            // Mobile device running Android
-            // Add specific styles for Android if needed
-        } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-            // Mobile device running iOS
-            // Apply CSS style to #my_camera img
-            alert('This device is iOS');
-            $("#my_camera img").css("transform", "rotate(-45deg)");
-        } else {
-            // Not a mobile device
-            // Add specific styles for non-mobile devices if needed
+                
+            });
         }
-    }   
+        function applyMobileDeviceStyles() {
+            var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+if (/Android/i.test(userAgent)) {
+    // Mobile device running Android
+    // Add specific styles for Android if needed
+    var myCameraDiv = document.getElementById('my_camera');
+    if (myCameraDiv) {
+        myCameraDiv.classList.add('androidCamera');
+    }
+    alert("This is Android");
+} else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+    // Mobile device running iOS
+    // Add class 'iosCamera' to the #my_camera div
+    var myCameraDiv = document.getElementById('my_camera');
+    if (myCameraDiv) {
+        myCameraDiv.classList.add('iosCamera');
+    }
+    alert("This is iOS");
+} else {
+    // Not a mobile device
+    // Add specific styles for non-mobile devices if needed
+}
+}
 
 // Example usage:
 applyMobileDeviceStyles();
-            });
-        }
     
        
     </script>
