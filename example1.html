@@ -60,38 +60,35 @@
         function take_snapshot() {
             // take snapshot and get image data
             Webcam.snap(function(data_uri) {
-                // Create an image element and set its source to the data URI
-                var orientation = window.orientation;
-                console.log(orientation);
+                
                 var imgElement = document.createElement('img');
                 imgElement.src = data_uri;
                 // Display the image in the page
                 document.getElementById('my_camera').innerHTML = '';
                 document.getElementById('my_camera').appendChild(imgElement);
-            });
-        }
-        function applyMobileDeviceStyles() {
-    var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                // Create an image element and set its source to the data URI
+                function applyMobileDeviceStyles() {
+        var userAgent = navigator.userAgent || navigator.vendor || window.opera;
 
-    if (/Android/i.test(userAgent)) {
-        // Mobile device running Android
-        // Add specific styles for Android if needed
-    } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        // Mobile device running iOS
-        // Apply CSS style to #my_camera img
-        alert('This device is iOS');
-        var myCameraImg = document.querySelector('#my_camera img');
-        if (myCameraImg) {
-            myCameraImg.style.transform = 'rotate(-45deg)';
+        if (/Android/i.test(userAgent)) {
+            // Mobile device running Android
+            // Add specific styles for Android if needed
+        } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+            // Mobile device running iOS
+            // Apply CSS style to #my_camera img
+            alert('This device is iOS');
+            $("#my_camera img").css("transform", "rotate(-45deg)");
+        } else {
+            // Not a mobile device
+            // Add specific styles for non-mobile devices if needed
         }
-    } else {
-        // Not a mobile device
-        // Add specific styles for non-mobile devices if needed
-    }
-}
+    }   
 
 // Example usage:
 applyMobileDeviceStyles();
+            });
+        }
+    
        
     </script>
     
