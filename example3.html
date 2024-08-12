@@ -101,8 +101,8 @@
         const deviceType = detectDevice();
         console.log("Device Type: " + deviceType); // Log the detected device type
         if (deviceType === 'iOS') {
-        document.getElementById('webcam-container').classList.add('ios-device');
-        }
+    document.querySelector('.containerWrap').classList.add('ios-device');
+}
         // Set up webcam options
         const options = {
             width: 320,
