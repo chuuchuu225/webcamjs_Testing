@@ -89,86 +89,102 @@
     
     <script>
     // Function to check device type
-    function detectDevice() {
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-            return 'iOS';
-        } else if (/android/i.test(userAgent)) {
-            return 'Android';
-        } else {
-            return 'Desktop';
-        }
+function detectDevice() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return 'iOS';
+    } else if (/android/i.test(userAgent)) {
+        return 'Android';
+    } else {
+        return 'Desktop';
+    }
+}
+
+// Function to initialize the webcam and capture a single photo with a timer
+function startWebcamWithTimer() {
+    const deviceType = detectDevice();
+    console.log("Device Type: " + deviceType); // Log the detected device type
+    if (deviceType === 'iOS') {
+        document.querySelector('.containerWrap').classList.add('ios-device');
+    }
+    
+    // Set up webcam options
+    const options = {
+        width: 320,
+        height: 320,
+        dest_width: 320,
+        dest_height: 320,
+        enable_flash: false,
+        image_format: 'jpeg',
+        jpeg_quality: 90
+    };
+
+    // Initialize the webcam
+    Webcam.set(options);
+    Webcam.attach('#webcam-container');
+
+    if (deviceType === 'iOS') {
+        // On iOS, show the manual capture button
+        document.getElementById('captureButton').style.display = 'block';
+        document.getElementById('captureButton').addEventListener('click', capturePhoto);
+    } else {
+        // On other devices, use the timer to capture the photo
+        startCountdownAndCapture();
     }
 
-    // Function to initialize the webcam and capture a single photo with a timer
-    function startWebcamWithTimer() {
-        const deviceType = detectDevice();
-        console.log("Device Type: " + deviceType); // Log the detected device type
-        if (deviceType === 'iOS') {
-    document.querySelector('.containerWrap').classList.add('ios-device');
+    // Set up the retake button
+    document.getElementById('retakeButton').addEventListener('click', retakePhoto);
 }
-        // Set up webcam options
-        const options = {
-            width: 320,
-            height: 320,
-            dest_width: 320,
-            dest_height: 320,
-            enable_flash: false,
-            image_format: 'jpeg',
-            jpeg_quality: 90
-        };
-    
-        // Initialize the webcam
-        Webcam.set(options);
-        Webcam.attach('#webcam-container');
-    
-        if (deviceType === 'iOS') {
-            // On iOS, skip the timer and show the manual capture button
-            document.getElementById('captureButton').style.display = 'block';
-            document.getElementById('captureButton').addEventListener('click', () => {
-                Webcam.snap((data_uri) => {
-                    // Display the captured photo
-                    document.getElementById('webcam-container').innerHTML = `<img src="${data_uri}" alt="Captured Photo">`;
-                    
-                    // Hide the capture button and show the retake button
-                    document.getElementById('captureButton').style.display = 'none';
-                    document.getElementById('retakeButton').style.display = 'block';
-                });
+
+function capturePhoto() {
+    Webcam.snap((data_uri) => {
+        // Display the captured photo
+        document.getElementById('webcam-container').innerHTML = `<img src="${data_uri}" alt="Captured Photo">`;
+
+        // Hide the capture button and show the retake button
+        document.getElementById('captureButton').style.display = 'none';
+        document.getElementById('retakeButton').style.display = 'block';
+    });
+}
+
+function startCountdownAndCapture() {
+    let countdown = 5; // 5 seconds countdown
+    const countdownElement = document.getElementById('countdown-text');
+    const overlayElement = document.getElementById('overlayImage');
+    const countdownInterval = setInterval(() => {
+        overlayElement.style.display = 'block';
+        countdownElement.style.display = 'block';
+        countdownElement.textContent = `${countdown}`;
+        countdown--;
+
+        if (countdown === 0) {
+            clearInterval(countdownInterval);
+
+            // Capture a single photo after the timer expires
+            Webcam.snap((data_uri) => {
+                document.getElementById('webcam-container').innerHTML = `<img src="${data_uri}" alt="Captured Photo">`;
+                countdownElement.style.display = 'none';
+                //overlayElement.style.display = 'none';
+                document.getElementById('retakeButton').style.display = 'block';
             });
-        } else {
-            // On other devices, use the timer to capture the photo
-            let countdown = 5; // 5 seconds countdown
-            const countdownElement = document.getElementById('countdown-text');
-            const overlayElement = document.getElementById('overlayImage');
-            const countdownInterval = setInterval(() => {
-                overlayElement.style.display = 'block';
-                countdownElement.style.display = 'block';
-                countdownElement.textContent = `${countdown}`;
-                countdown--;
-        
-                if (countdown === 0) {
-                    clearInterval(countdownInterval);
-        
-                    // Capture a single photo after the timer expires
-                    Webcam.snap((data_uri) => {
-                        document.getElementById('webcam-container').innerHTML = `<img src="${data_uri}" alt="Captured Photo">`;
-                        countdownElement.style.display = 'none';
-                        //overlayElement.style.display = 'none';
-                        document.getElementById('retakeButton').style.display = 'block';
-                    });
-                }
-            }, 1000);
         }
-    
-        document.getElementById('retakeButton').addEventListener('click', () => {
-            document.getElementById('webcam-container').innerHTML = '';
-            document.getElementById('countdown-text').style.display = 'block';
-            document.getElementById('retakeButton').style.display = 'none';
-            startWebcamWithTimer();
-        });
-    }
-    
-    window.onload = startWebcamWithTimer;
+    }, 1000);
+}
+
+function retakePhoto() {
+    // Detach the webcam before reattaching
+    Webcam.reset();
+    document.getElementById('webcam-container').innerHTML = '';
+
+    // Reset the UI elements
+    document.getElementById('countdown-text').style.display = 'block';
+    document.getElementById('retakeButton').style.display = 'none';
+
+    // Reinitialize the webcam and the capture process
+    startWebcamWithTimer();
+}
+
+window.onload = startWebcamWithTimer;
     </script>
     
 </body>
