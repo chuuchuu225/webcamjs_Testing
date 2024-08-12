@@ -141,7 +141,7 @@
                     Webcam.snap((data_uri) => {
                         document.getElementById('webcam-container').innerHTML = `<img src="${data_uri}" alt="Captured Photo">`;
                         countdownElement.style.display = 'none';
-                        overlayElement.style.display = 'none';
+                        //overlayElement.style.display = 'none';
                         document.getElementById('retakeButton').style.display = 'block';
                     });
                 }
