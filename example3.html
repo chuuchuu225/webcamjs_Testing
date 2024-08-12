@@ -55,6 +55,9 @@
         display: none;
         margin-left: 15px;
     }
+    #webcam-container-ios_div {
+        transform: rotate(90deg);
+    }
 </style>
 
 <body>
@@ -94,7 +97,9 @@
     function startWebcamWithTimer() {
         const deviceType = detectDevice();
         console.log("Device Type: " + deviceType); // Log the detected device type
-
+        if (deviceType === 'iOS') {
+        document.getElementById('webcam-container').classList.add('ios-device');
+        }
         // Set up webcam options
         const options = {
             width: 320,
