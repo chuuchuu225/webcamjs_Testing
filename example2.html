@@ -17,11 +17,24 @@
         #takeshot-ios_div {
             transform: rotate(-90deg);
         }
+        #faceOverlay {
+    background: radial-gradient(circle at center, transparent 38%, rgba(0, 0, 0, 0.8) 16%);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    /* border-radius: 50%; */
+    background-size: 100% 100%;
+    background-position: 50% 50%;
+    pointer-events: none;
+    z-index: 10;
+}
         span.webcamjs-ios-text {
     transform: rotate(90deg);
     position: absolute;
     top: 40%;
     left: 40%;
+    z-index: 5;
 }
     </style>
 </head>
