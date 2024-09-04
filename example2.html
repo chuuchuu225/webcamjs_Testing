@@ -3,150 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatic Photo Capture with Timer</title>
-    <script type="text/javascript" src="webcamjs/webcam.min.js"></script>
-    
+    <title>Webcam Snapshot</title>
+    <style>
+        body { font-family: Helvetica, sans-serif; }
+        .containerWrap { text-align: center; margin-top: 20px; }
+        .encryptionWrap { padding: 20px; border: 1px solid #ccc; background: #f9f9f9; }
+        .user-change-photo { position: relative; display: inline-block; }
+        #takeshot { width: 100%; height: 100%; }
+        #faceOverlay { position: absolute; top: 0; left: 0; z-index: 10; border-radius: 50%; border: 5px solid #00f; }
+        #countdown-text { font-size: 24px; color: red; margin-top: 20px; }
+        #faceScanText { font-size: 18px; color: #333; margin-top: 20px; }
+        #take-snapshot-btn { display: none; margin-top: 20px; padding: 10px 20px; font-size: 18px; }
+    </style>
 </head>
-<style>
-    .containerWrap {
-        position: relative;
-        width: 320px;
-        height: 320px;
-    }
-    #countdown-text {
-        text-align: center;
-        display: block;
-        position: absolute;
-        top: 45%;
-        font-size: 40px;
-        font-weight: 600;
-        color: #fff;
-        left: 50%;
-    }
-    video {
-        object-fit: cover;
-        border-radius: 50%;
-    }
-    #webcam-container img {
-        border-radius: 50%;
-    }
-    div#overlayImage {
-        border-radius: 50%;
-        width: 320px;
-        height: 320px;
-        /* background: red; */
-        position: absolute;
-        top: 0;
-        background: grey;
-    }
-    #overlayImage img {
-        width: 100%;
-        height: 100%;
-    }
-    #overlayImage {
-        display: none;
-    }
-    .buttonWrap {
-        display: flex;
-    }
-    #retakeButton {
-        margin-right: 15px;
-    }
-</style>
-
 <body>
-    <div class="containerWrap">
+    <div id="webcam-container">
+        <input type="hidden" id="profile-picture" name="UserImage" />
+    </div>
+<div class="containerWrap encryptionWrap">
+    <div class="user-change-photo shadow" id="takeshot">
+        <canvas id="canvas" style="display: none;"></canvas>
+        <input type="hidden" id="profile-Image" name="UserImage" />
+    </div>
+    <div class="overlayImage" id="faceOverlay"></div>
+    <div id="countdown-text"></div>
+    <div id="faceScanText">Please position your face fully within circle.</div>
+    <button id="take-snapshot-btn" onClick="take_snapshot()">Take Snapshot</button>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="webcamjs/webcam.min.js"></script>
+<script language="JavaScript">
+    let OTPtimeLeft = 300;
+    let OTPtimerInterval;
 
-        <div id="webcam-container" style="width: 320px; height: 320px; overflow: hidden;"></div>
-        <!-- Overlay Image -->
-        <div id="overlayImage">
-            <img src="overlay1.png" alt="">
-        </div>
-        <!-- Countdown text -->
-        <div id="countdown-text" ></div>
-        
-    </div>
+    function updateOTP_Timer() {
+        document.getElementById('OTP_timer').innerText = formatTime(OTPtimeLeft);
+
+        OTPtimeLeft--;
+        if (OTPtimeLeft < 0) {
+            clearInterval(OTPtimerInterval);
+            document.getElementById('OTP_timer').innerText = 'Expired';
+            document.getElementById('OTP_timer').style.color = 'red';
+        }
+    }
+
+    function formatTime(timeInSeconds) {
+        let minutes = Math.floor(timeInSeconds / 60);
+        let seconds = timeInSeconds % 60;
+        return minutes + 'm ' + seconds + 's';
+    }
+
+    function updateCountdownText(count) {
+        document.getElementById('countdown-text').innerHTML = count;
+    }
+
+    var previousPageUrl;
+    var screenWidth = window.innerWidth * 0.5;
+    var screenHeight = window.innerHeight * 0.5;
+    var screenMobileWidth = window.innerWidth * 1;
+    var screenMobileHeight = window.innerHeight * 0.5;
+    var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    var isMobile = /Android|iPad|iPhone|iPod/.test(userAgent) && (!window.MSStream);
+
+    $(document).ready(function () {
+        var faceOverlay = document.getElementById("faceOverlay");
+        var takeshot = document.getElementById("takeshot");
+
+        faceOverlay.style.width = takeshot.style.width = (isMobile ? screenMobileWidth : screenWidth) + "px";
+        faceOverlay.style.height = takeshot.style.height = (isMobile ? screenMobileHeight : screenHeight) + "px";
+
+        if (/Android/i.test(userAgent)) {
+            var myCameraDiv = document.getElementById('takeshot');
+            if (takeshot) {
+                takeshot.classList.add('androidCamera');
+            }
+            Takesnap();
+            SnapTimer(5); // Start countdown for Android
+        } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+            if (takeshot) {
+                takeshot.classList.add('iosCamera');
+            }
+            document.getElementById('take-snapshot-btn').style.display = 'block'; // Show the button on iOS
+            Takesnap(); // Attach the camera for iOS but don't start countdown
+        } else {
+            Takesnap();
+            SnapTimer(5); // Start countdown for Desktop
+        }
+    });
+    const profilePictureInput = document.getElementById('profile-picture');
     
-    
-    <div class="buttonWrap">
-        <!-- Button to retake photo -->
-        <button id="retakeButton" style="display:none;">Retake Photo</button>
-        <!-- Button to cancel taking photo -->
-        <button id="cancelButton">Cancel</button>
-    </div>
-    
-    <script>
-        
-    // Function to initialize the webcam and capture a single photo with a timer
-    function startWebcamWithTimer() {
-        // Set up webcam options
-        const options = {
-            width: 320,
-            height: 320,
-            dest_width: 320,
-            dest_height: 320,
-            enable_flash: false,
-            image_format: 'jpeg',
-            jpeg_quality: 90
+    function take_snapshot() {
+    // If an event was passed, prevent its default action
+    if (event) {
+        event.preventDefault();
+    }
+
+        var constraints = {
+            video: {
+                width: { ideal: isMobile ? screenMobileWidth : screenWidth },
+                height: { ideal: isMobile ? screenMobileHeight : screenHeight },
+                facingMode: 'environment' // Use the rear camera if available
+            }
         };
-    
-        // Initialize the webcam
-        Webcam.set(options);
-        Webcam.attach('#webcam-container');
-    
-        // Display a countdown timer (adjust the timer duration as needed)
-        let countdown = 5; // 5 seconds countdown
-        const countdownElement = document.getElementById('countdown-text');
-        const overlayElement = document.getElementById('overlayImage');
-        const countdownInterval = setInterval(() => {
-            // Update the countdown text on the HTML element
-            overlayElement.style.display = 'block';
-            countdownElement.textContent = `${countdown}`;
-            countdown--;
-    
-            if (countdown === 0) {
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function (stream) {
+                var videoElement = document.createElement('video');
+                videoElement.srcObject = stream;
+                videoElement.onloadedmetadata = function () {
+                    const cropSize = isMobile ? Math.min(faceOverlay.offsetWidth, videoElement.videoWidth) / 1.5 : Math.min(faceOverlay.offsetWidth, videoElement.videoWidth) / 2;
+                    const centerX = videoElement.videoWidth / 2;
+                    const centerY = videoElement.videoHeight / 2;
+                    var canvas = document.createElement('canvas');
+                    var context = canvas.getContext('2d');
+                    canvas.width = cropSize;
+                    canvas.height = cropSize;
+
+                    const cropX = Math.max(0, centerX - cropSize / 2);
+                    const cropY = Math.max(0, centerY - cropSize / 2);
+                    const cropWidth = Math.min(videoElement.videoWidth, cropSize);
+                    const cropHeight = Math.min(videoElement.videoHeight, cropSize);
+
+                    context.drawImage(
+                        videoElement,
+                        cropX,
+                        cropY,
+                        cropWidth,
+                        cropHeight,
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+                    var dataURI = canvas.toDataURL('image/jpeg');
+                    profilePictureInput.value = dataURI;
+                    //submitForm();
+
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                videoElement.play();
+            })
+            .catch(function (err) {
+                console.log('Error accessing camera:', err);
+            });
+    }
+
+    function Takesnap() {
+        var width, height;
+
+        if (isMobile) {
+            width = screenMobileWidth;
+            height = screenMobileHeight;
+        } else {
+            width = screenWidth;
+            height = screenHeight;
+        }
+
+        Webcam.set({
+            width: width,
+            height: height,
+            image_fit: 'cover',
+            image_format: 'jpeg',
+            jpeg_quality: 90,
+        });
+        Webcam.attach('#takeshot');
+    }
+
+    function SnapTimer(count) {
+        updateCountdownText(count);
+        var countdownInterval = setInterval(function () {
+            count--;
+            updateCountdownText(count);
+            if (count === 0) {
+                take_snapshot(); // Automatically take snapshot when countdown ends
                 clearInterval(countdownInterval);
-    
-                // Capture a single photo after the timer expires
-                Webcam.snap((data_uri) => {
-                    // Display the captured photo
-                    document.getElementById('webcam-container').innerHTML = `<img src="${data_uri}" alt="Captured Photo">`;
-    
-                    // Hide the countdown text
-                    countdownElement.style.display = 'none';
-                    // Hide overlay image 
-                    overlayElement.style.display = 'none';
-                    // Display the "Retake" button
-                    document.getElementById('retakeButton').style.display = 'block';
-                });
+                document.getElementById('countdown-text').innerHTML = "";
             }
         }, 1000);
-    
-        // Hide the "Retake" button initially
-        document.getElementById('retakeButton').style.display = 'none';
-    
-        // Add click event listener to the "Retake" button
-        document.getElementById('retakeButton').addEventListener('click', () => {
-            // Clear the content of the webcam-container
-            document.getElementById('webcam-container').innerHTML = '';
-    
-            // Reset the countdown
-            countdown = 5;
-    
-            // Display the countdown text
-            countdownElement.style.display = 'block';
-    
-            // Display the "Retake" button
-            document.getElementById('retakeButton').style.display = 'none';
-    
-            // Restart the webcam with timer
-            startWebcamWithTimer();
-        });
     }
-    
-    // Start the webcam with timer when the page loads
-    window.onload = startWebcamWithTimer;
-    </script>
-    
-    </body>
+</script>
+
+</body>
 </html>
